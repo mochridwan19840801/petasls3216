@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Peta RT SLS Bekasi</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <section class="brand-panel">
+          <div class="logo-stack">
+            <img src="assets/bps-bekasi.png" alt="BPS Kabupaten Bekasi">
+            <img src="assets/se2026.png" alt="Sensus Ekonomi 2026">
+          </div>
+          <p class="eyebrow">Peta Wilkerstat</p>
+          <h1>Bekasi</h1>
+          <p class="subtitle">Peta Wilkerstat BPS Kabupaten Bekasi</p>
+        </section>
+
+        <section class="control-panel">
+          <div class="control-grid">
+            <label class="full-field">
+              Kecamatan
+              <select id="kecamatanSelect"></select>
+            </label>
+            <label>
+              Desa/Kelurahan
+              <select id="desaSelect"></select>
+            </label>
+            <label>
+              RW
+              <select id="rwSelect"></select>
+            </label>
+          </div>
+          <label>
+            Cari RT/SLS
+            <input id="searchInput" type="search" placeholder="Contoh: RT 003, CIKARAGEMAN, 321601">
+          </label>
+          <div class="button-row">
+            <button id="fitButton" type="button">Fokus Area</button>
+            <button id="clearButton" type="button">Reset</button>
+          </div>
+          <button id="locateButton" class="location-button" type="button">Lokasi Saya</button>
+          <p id="locationStatus" class="location-status">GPS belum aktif.</p>
+        </section>
+
+        <section class="list-panel">
+          <div class="list-heading">
+            <h2 id="listTitle">Daftar SLS</h2>
+            <span id="listCount">0 area</span>
+          </div>
+          <div id="featureList" class="feature-list"></div>
+        </section>
+
+        <section class="stats-grid" aria-label="Ringkasan data">
+          <div>
+            <span id="statShown">0</span>
+            <small>Ditampilkan</small>
+          </div>
+          <div>
+            <span id="statTotal">0</span>
+            <small>Total SLS</small>
+          </div>
+          <div>
+            <span id="statArea">0</span>
+            <small>Total luas</small>
+          </div>
+        </section>
+
+      </aside>
+
+      <section class="map-stage">
+        <div id="map"></div>
+        <div class="map-polygon-control">
+          <label>
+            Tampilan polygon
+            <select id="viewModeSelect">
+              <option value="kecamatan">Polygon Kecamatan</option>
+              <option value="desa">Polygon Desa/Kelurahan</option>
+              <option value="sls" selected>Polygon SLS</option>
+            </select>
+          </label>
+        </div>
+        <div id="mapMessage" class="map-message">
+          <strong>Memuat peta</strong>
+          <span>Polygon SLS akan tampil otomatis setelah data terbaca.</span>
+        </div>
+      </section>
+    </main>
+
+    <script src="data/sls-bekasi.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
