@@ -65,7 +65,7 @@ select {
 
 .logo-stack img {
   display: block;
-  width: 70%;
+  width: 50%;
   aspect-ratio: 1;
   max-height: none;
   object-fit: contain;
