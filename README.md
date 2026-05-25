@@ -33,7 +33,7 @@ Opsi deploy yang cocok:
 - Vercel
 - server kantor dengan HTTPS
 
-Setelah dibuka di Android, tekan **Lokasi Saya**, pilih **Izinkan**, lalu titik biru dan lingkaran akurasi akan muncul di peta.
+Setelah dibuka di Android, tekan **Lokasi Saya**, pilih **Izinkan**, lalu titik biru dan lingkaran akurasi akan muncul di peta. Posisi hanya dibaca saat tombol ditekan, sehingga peta tetap bebas digeser setelah lokasi muncul.
 
 ## File tunggal
 
@@ -64,7 +64,7 @@ data/sls-bekasi.js
 Atribut yang dipakai aplikasi:
 
 - `nmsls` untuk nama RT/RW/SLS
-- `idsls` untuk ID SLS
+- `idsubsls` untuk ID Sub SLS yang ditampilkan di daftar dan popup
 - `nmdesa` untuk filter desa/kelurahan
 - `nmkec` untuk info kecamatan
 - `nmkab` untuk info kabupaten

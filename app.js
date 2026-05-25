@@ -10,7 +10,6 @@ const state = {
   boundaryLayer: null,
   userMarker: null,
   accuracyCircle: null,
-  watchId: null,
   selectedId: null,
   viewMode: "sls",
 };
@@ -169,11 +168,7 @@ function startLocationTracking() {
   setLocationStatus("Mencari posisi GPS...");
   els.locateButton.disabled = true;
 
-  if (state.watchId !== null) {
-    navigator.geolocation.clearWatch(state.watchId);
-  }
-
-  state.watchId = navigator.geolocation.watchPosition(
+  navigator.geolocation.getCurrentPosition(
     updateUserLocation,
     handleLocationError,
     {
@@ -240,8 +235,8 @@ function prepareProperties(features) {
     props.__index = index;
     props.__rt = extractCode(props.nmsls, "RT");
     props.__rw = extractCode(props.nmsls, "RW");
-    props.__label = props.nmsls || props.idsls || `SLS ${index + 1}`;
-    props.__displayId = props.idsls;
+    props.__label = props.nmsls || props.idsubsls || props.idsls || `SLS ${index + 1}`;
+    props.__displayId = slsId(props);
     props.__color = COLORS[Math.abs(hashString(props.nmdesa || props.__label)) % COLORS.length];
   });
 }
@@ -299,7 +294,7 @@ function applyFilters() {
     if (state.viewMode === "sls" && props.nmdesa !== desa) return false;
     if (state.viewMode === "sls" && rw !== "ALL" && props.__rw !== rw) return false;
     if (!query) return true;
-    return [props.nmsls, props.idsls, props.nmdesa, props.nmkec, props.idsubsls]
+    return [props.nmsls, props.idsubsls, props.idsls, props.nmdesa, props.nmkec]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(query));
   });
@@ -383,7 +378,7 @@ function renderList() {
     button.dataset.id = props.__displayId;
     button.innerHTML = `
       <span class="feature-title">${escapeHtml(props.__label)}</span>
-      <span class="feature-meta">${escapeHtml(listMeta(props))}</span>
+      <span class="feature-meta">${escapeHtml(listMetaBySubSls(props))}</span>
     `;
     button.addEventListener("click", () => selectFeature(props.__displayId, true));
     fragment.appendChild(button);
@@ -419,6 +414,10 @@ function buildDisplayedFeatures() {
   return [...groups.entries()].map(([, features]) => {
     const first = features[0].properties;
     const area = features.reduce((sum, feature) => sum + (Number(feature.properties.luas) || 0), 0);
+    const muatanUb = features.reduce((sum, feature) => sum + (Number(feature.properties.muatan_ub) || 0), 0);
+    const muatanUm = features.reduce((sum, feature) => sum + (Number(feature.properties.muatan_um) || 0), 0);
+    const muatanUmk = features.reduce((sum, feature) => sum + (Number(feature.properties.muatan_umk) || 0), 0);
+    const muatan = muatanUb + muatanUm + muatanUmk;
     const desaCount = new Set(features.map((feature) => feature.properties.nmdesa)).size;
     const displayId = state.viewMode === "kecamatan" ? `kecamatan:${first.nmkec}` : `desa:${first.iddesa}`;
     const label = state.viewMode === "kecamatan" ? `Kecamatan ${first.nmkec}` : `Desa/Kelurahan ${first.nmdesa}`;
@@ -433,8 +432,13 @@ function buildDisplayedFeatures() {
         __desaCount: desaCount,
         __color: first.__color,
         __boundary: buildBoundaryGeometry(features),
+        idsubsls: "",
         idsls: "",
         luas: area,
+        muatan,
+        muatan_ub: muatanUb,
+        muatan_um: muatanUm,
+        muatan_umk: muatanUmk,
         nmdesa: state.viewMode === "kecamatan" ? `${formatNumber(desaCount)} desa/kelurahan` : first.nmdesa,
         nmkec: first.nmkec,
         nmkab: first.nmkab,
@@ -510,6 +514,16 @@ function listMeta(props) {
   return `${props.nmdesa} · ${props.nmkec} · ID ${props.idsls}`;
 }
 
+function listMetaBySubSls(props) {
+  if (props.__levelLabel === "Kecamatan") {
+    return `${props.__slsCount} SLS - ${props.__desaCount} desa/kelurahan - ${props.nmkec}`;
+  }
+  if (props.__levelLabel === "Desa/Kelurahan") {
+    return `${props.__slsCount} SLS - ${props.nmdesa} - ${props.nmkec}`;
+  }
+  return `${props.nmdesa} - ${props.nmkec} - ID ${slsId(props)}`;
+}
+
 function updateControlState() {
   const isKecamatan = state.viewMode === "kecamatan";
   const isDesa = state.viewMode === "desa";
@@ -558,7 +572,7 @@ function selectFeature(idsls, openPopup) {
   if (!selectedLayer) return;
   state.map.fitBounds(selectedLayer.getBounds(), { padding: [36, 36], maxZoom: 17 });
   if (openPopup) {
-    selectedLayer.bindPopup(popupHtml(selectedLayer.feature.properties)).openPopup();
+    selectedLayer.bindPopup(popupHtmlBySubSls(selectedLayer.feature.properties)).openPopup();
   }
 }
 
@@ -572,6 +586,31 @@ function popupHtml(props) {
         <dt>Desa</dt><dd>${escapeHtml(props.nmdesa)}</dd>
         <dt>Kecamatan</dt><dd>${escapeHtml(props.nmkec)}</dd>
         <dt>Kabupaten</dt><dd>${escapeHtml(props.nmkab)}</dd>
+        <dt>Muatan</dt><dd>${formatNumber(Number(props.muatan) || 0)}</dd>
+        <dt>UB</dt><dd>${formatNumber(Number(props.muatan_ub) || 0)}</dd>
+        <dt>UM</dt><dd>${formatNumber(Number(props.muatan_um) || 0)}</dd>
+        <dt>UMK</dt><dd>${formatNumber(Number(props.muatan_umk) || 0)}</dd>
+        ${props.__slsCount ? `<dt>Jumlah SLS</dt><dd>${formatNumber(props.__slsCount)}</dd>` : ""}
+        <dt>Luas</dt><dd>${Number(props.luas || 0).toLocaleString("id-ID", { maximumFractionDigits: 4 })}</dd>
+      </dl>
+    </div>
+  `;
+}
+
+function popupHtmlBySubSls(props) {
+  return `
+    <div class="popup">
+      <h3>${escapeHtml(props.__label || props.nmsls || "Wilayah")}</h3>
+      <dl>
+        <dt>Level</dt><dd>${escapeHtml(props.__levelLabel || "SLS")}</dd>
+        ${slsId(props) ? `<dt>ID Sub SLS</dt><dd>${escapeHtml(slsId(props))}</dd>` : ""}
+        <dt>Desa</dt><dd>${escapeHtml(props.nmdesa)}</dd>
+        <dt>Kecamatan</dt><dd>${escapeHtml(props.nmkec)}</dd>
+        <dt>Kabupaten</dt><dd>${escapeHtml(props.nmkab)}</dd>
+        <dt>Muatan</dt><dd>${formatNumber(Number(props.muatan) || 0)}</dd>
+        <dt>UB</dt><dd>${formatNumber(Number(props.muatan_ub) || 0)}</dd>
+        <dt>UM</dt><dd>${formatNumber(Number(props.muatan_um) || 0)}</dd>
+        <dt>UMK</dt><dd>${formatNumber(Number(props.muatan_umk) || 0)}</dd>
         ${props.__slsCount ? `<dt>Jumlah SLS</dt><dd>${formatNumber(props.__slsCount)}</dd>` : ""}
         <dt>Luas</dt><dd>${Number(props.luas || 0).toLocaleString("id-ID", { maximumFractionDigits: 4 })}</dd>
       </dl>
@@ -588,6 +627,15 @@ function fitFilteredBounds() {
 function extractCode(text, label) {
   const match = String(text || "").match(new RegExp(`${label}\\s*(\\d+)`, "i"));
   return match ? match[1].padStart(3, "0") : "";
+}
+
+function slsId(props) {
+  return props.idsubsls || props.idsls || "";
+}
+
+function formatPopupValue(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  return value;
 }
 
 function uniqueSorted(values) {
