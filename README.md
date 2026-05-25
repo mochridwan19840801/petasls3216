@@ -1,4 +1,4 @@
-# Peta RT SLS Bekasi
+# Peta Wilkerstat BPS Kabupaten Bekasi
 
 Aplikasi web statis untuk menampilkan polygon SLS/RT di atas peta publik tanpa API key.
 
